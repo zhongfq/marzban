@@ -614,7 +614,17 @@ export const UsersTable: FC<UsersTableProps> = (props) => {
           )}
         </Tbody>
       </Table>
-      <Pagination />
+      <Pagination
+        onChange={(page, limit) => {
+          onFilterChange({
+            ...filters,
+            limit,
+            offset: page * limit
+          })
+        }}
+        total={totalUsers.total}
+        limit={filters.limit}
+        offset={filters.offset}/>
     </Box>
   );
 };

@@ -3,6 +3,8 @@ import {
   AlertIcon,
   Box,
   Button,
+  Center,
+  Input as ChakraInput,
   Collapse,
   Flex,
   FormControl,
@@ -13,6 +15,9 @@ import {
   GridItem,
   HStack,
   IconButton,
+  InputGroup,
+  InputLeftElement,
+  InputRightElement,
   Modal,
   ModalBody,
   ModalCloseButton,
@@ -20,27 +25,46 @@ import {
   ModalFooter,
   ModalHeader,
   ModalOverlay,
+  Popover,
+  PopoverArrow,
+  PopoverContent,
+  PopoverTrigger,
   Select,
+  SimpleGrid,
   Spinner,
   Switch,
+  Tag,
+  TagCloseButton,
+  TagLabel,
+  TagLeftIcon,
   Text,
   Textarea,
   Tooltip,
   VStack,
   chakra,
   useColorMode,
+  useDisclosure,
   useToast,
 } from "@chakra-ui/react";
 import {
+  ArrowPathRoundedSquareIcon,
+  Bars3Icon,
   ChartPieIcon,
+  InformationCircleIcon,
+  MagnifyingGlassIcon,
   PencilIcon,
+  PlusIcon,
+  RssIcon,
   UserPlusIcon,
+  XMarkIcon,
 } from "@heroicons/react/24/outline";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { ReactComponent as AddTagIcon } from "assets/add_tag.svg";
 import { resetStrategy } from "constants/UserSettings";
+import { ProxyTag, useClash } from "contexts/ClashContext";
 import { FilterUsageType, useDashboard } from "contexts/DashboardContext";
 import dayjs from "dayjs";
-import { FC, useEffect, useState } from "react";
+import { FC, useEffect, useRef, useState } from "react";
 import ReactApexChart from "react-apexcharts";
 import ReactDatePicker from "react-datepicker";
 import { Controller, FormProvider, useForm, useWatch } from "react-hook-form";
@@ -59,6 +83,30 @@ import { Icon } from "./Icon";
 import { Input } from "./Input";
 import { RadioGroup } from "./RadioGroup";
 import { UsageFilter, createUsageConfig } from "./UsageFilter";
+import { DragDropContext, Draggable, Droppable } from "@hello-pangea/dnd";
+
+const iconProps = {
+  baseStyle: {
+    w: 5,
+    h: 5,
+  },
+};
+
+const SubscriptionIcon = chakra(RssIcon, iconProps);
+const RankIcon = chakra(Bars3Icon, iconProps);
+const ClearIcon = chakra(XMarkIcon, iconProps);
+const AddIcon = chakra(PlusIcon, iconProps);
+const SearchIcon = chakra(MagnifyingGlassIcon, iconProps);
+const EmptyTagIcon = chakra(AddTagIcon);
+
+const InfoIcon = chakra(InformationCircleIcon, {
+  baseStyle: {
+    w: 4,
+    h: 4,
+    color: "gray.400",
+    cursor: "pointer",
+  },
+});
 
 const AddUserIcon = chakra(UserPlusIcon, {
   baseStyle: {
@@ -121,6 +169,9 @@ const schema = z.object({
     });
     return ins;
   }),
+  sub_url_prefix: z.any(),
+  sub_tags: z.any(),
+  sub_revoked_at: z.string(),
 });
 
 export type UserDialogProps = {};
@@ -136,6 +187,7 @@ const formatUser = (user: User): FormType => {
       ? Number((user.data_limit / 1073741824).toFixed(5))
       : user.data_limit,
     selected_proxies: Object.keys(user.proxies) as ProxyKeys,
+    sub_tags: user.sub_tags || "",
   };
 };
 const getDefaultValues = (): FormType => {
@@ -159,6 +211,9 @@ const getDefaultValues = (): FormType => {
       trojan: { password: "" },
       shadowsocks: { password: "", method: "chacha20-ietf-poly1305" },
     },
+    sub_url_prefix: "",
+    sub_tags: "",
+    sub_revoked_at: "",
   };
 };
 
@@ -193,6 +248,8 @@ export const UserDialog: FC<UserDialogProps> = () => {
   const isOpen = isCreatingNewUser || isEditing;
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>("");
+  const [overflow, setOverflow] = useState("hidden");
+  const [subURLPrefix, setSubURLPrefix] = useState("");
   const toast = useToast();
   const { t, i18n } = useTranslation();
 
@@ -202,6 +259,12 @@ export const UserDialog: FC<UserDialogProps> = () => {
   const handleUsageToggle = () => {
     setUsageVisible((current) => !current);
   };
+
+  const {
+    isOpen: isSubOpen,
+    onToggle: onSubToggle,
+    onClose: closeSub,
+  } = useDisclosure();
 
   const form = useForm<FormType>({
     defaultValues: getDefaultValues(),
@@ -242,6 +305,7 @@ export const UserDialog: FC<UserDialogProps> = () => {
   useEffect(() => {
     if (editingUser) {
       form.reset(formatUser(editingUser));
+      setSubURLPrefix(editingUser.sub_url_prefix);
 
       fetchUsageWithFilter({
         start: dayjs().utc().subtract(30, "day").format("YYYY-MM-DDTHH:00:00"),
@@ -313,6 +377,7 @@ export const UserDialog: FC<UserDialogProps> = () => {
     setError(null);
     setUsageVisible(false);
     setUsageFilter("1m");
+    closeSub();
   };
 
   const handleResetUsage = () => {
@@ -491,21 +556,18 @@ export const UserDialog: FC<UserDialogProps> = () => {
                                       : undefined
                                   }
                                   onChange={(date: Date) => {
-                                    field.onChange({
-                                      target: {
-                                        value: date
-                                          ? dayjs(
-                                              dayjs(date)
-                                                .set("hour", 23)
-                                                .set("minute", 59)
-                                                .set("second", 59)
-                                            )
-                                              .utc()
-                                              .valueOf() / 1000
-                                          : 0,
-                                        name: "expire",
-                                      },
-                                    });
+                                    field.onChange(
+                                      date
+                                        ? dayjs(
+                                            dayjs(date)
+                                              .set("hour", 23)
+                                              .set("minute", 59)
+                                              .set("second", 59)
+                                          )
+                                            .utc()
+                                            .valueOf() / 1000
+                                        : 0
+                                    );
                                   }}
                                   customInput={
                                     <Input
@@ -600,6 +662,111 @@ export const UserDialog: FC<UserDialogProps> = () => {
                     </FormErrorMessage>
                   </FormControl>
                 </GridItem>
+                <GridItem colSpan={{ base: 1, md: 2 }}>
+                  <Collapse
+                    in={isSubOpen}
+                    style={{ overflow: overflow }}
+                    onAnimationComplete={() => setOverflow("unset")}
+                    animateOpacity
+                  >
+                    <SimpleGrid columns={{ base: 1, md: 2 }} spacing={3}>
+                      <Flex
+                        pt="15px"
+                        flexDirection="column"
+                        gridAutoRows="min-content"
+                        w="full"
+                      >
+                        <FormControl mb="10px">
+                          <FormLabel>{t("userDialog.issuedAt")}</FormLabel>
+                          <Controller
+                            name="sub_revoked_at"
+                            control={form.control}
+                            render={({ field }) => (
+                              <HStack>
+                                <ChakraInput
+                                  size="sm"
+                                  borderRadius="6px"
+                                  disabled={true}
+                                  value={dayjs
+                                    .utc(field.value)
+                                    .local()
+                                    .format("YYYY-MM-DD HH:mm:ss")}
+                                />
+                              </HStack>
+                            )}
+                          />
+                        </FormControl>
+                        <FormControl
+                          mb="10px"
+                          isInvalid={!!form.formState.errors.sub_url_prefix}
+                        >
+                          <FormLabel>{t("userDialog.urlPrefix")}</FormLabel>
+                          <Input
+                            size="sm"
+                            type="text"
+                            borderRadius="6px"
+                            placeholder="Domain (e.g. https://example.com)"
+                            disabled={disabled}
+                            {...form.register("sub_url_prefix", {
+                              onChange: (e) => setSubURLPrefix(e.target.value),
+                            })}
+                          />
+                          {subURLPrefix && (
+                            <Text
+                              maxW="300px"
+                              pt="1"
+                              fontSize="xs"
+                              color="gray.500"
+                              w="inherit"
+                              noOfLines={1}
+                            >
+                              {subURLPrefix}
+                              /sub/eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9
+                            </Text>
+                          )}
+                        </FormControl>
+                      </Flex>
+                      <Flex
+                        pt="15px"
+                        flexDirection="column"
+                        gridAutoRows="min-content"
+                        w="full"
+                      >
+                        <FormControl
+                          mb="10px"
+                          isInvalid={!!form.formState.errors.sub_url_prefix}
+                        >
+                          <HStack mb="1">
+                            <FormLabel mr="0" mb="0">
+                              {t("tags")}
+                            </FormLabel>
+                            <Popover isLazy placement="top">
+                              <PopoverTrigger>
+                                <InfoIcon />
+                              </PopoverTrigger>
+                              <PopoverContent w="300px">
+                                <PopoverArrow />
+                                <Text fontSize="xs" p="2">
+                                  {t("userDialog.tags.info")}
+                                </Text>
+                              </PopoverContent>
+                            </Popover>
+                          </HStack>
+                          <Controller
+                            name="sub_tags"
+                            control={form.control}
+                            render={({ field }) => (
+                              <ProxyTags
+                                tags={field.value}
+                                onChange={field.onChange}
+                              />
+                            )}
+                          />
+                        </FormControl>
+                      </Flex>
+                    </SimpleGrid>
+                  </Collapse>
+                </GridItem>
                 {isEditing && usageVisible && (
                   <GridItem pt={6} colSpan={{ base: 1, md: 2 }}>
                     <VStack gap={4}>
@@ -666,6 +833,21 @@ export const UserDialog: FC<UserDialogProps> = () => {
                           <DeleteIcon />
                         </IconButton>
                       </Tooltip>
+                      <Tooltip
+                        label={t("userDialog.subscription")}
+                        placement="top"
+                      >
+                        <IconButton
+                          aria-label="usage"
+                          size="sm"
+                          onClick={() => {
+                            setOverflow("hidden");
+                            onSubToggle();
+                          }}
+                        >
+                          <SubscriptionIcon />
+                        </IconButton>
+                      </Tooltip>
                       <Tooltip label={t("userDialog.usage")} placement="top">
                         <IconButton
                           aria-label="usage"
@@ -706,5 +888,237 @@ export const UserDialog: FC<UserDialogProps> = () => {
         </ModalContent>
       </FormProvider>
     </Modal>
+  );
+};
+
+type ProxyTagsProps = {
+  tags: string;
+  onChange: (value: string) => void;
+};
+
+const ProxyTags: FC<ProxyTagsProps> = ({ tags, onChange }) => {
+  const { proxyTags, onCreateProxy } = useClash();
+  const { onEditingSubscription } = useDashboard();
+  const { t } = useTranslation();
+
+  const selected_tags = tags.split(",").filter((v) => v.length > 0);
+  const tagMap: { [key: string]: ProxyTag } = proxyTags.reduce(
+    (ac, a) => ({ ...ac, [a.tag]: a }),
+    {}
+  );
+
+  const hasAvailableTags = !proxyTags.every((v) => v.tag == "built-in");
+
+  const tagRef = useRef<HTMLSelectElement>(null);
+  const [search, setSearch] = useState("");
+  const onSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearch(e.target.value);
+  };
+
+  return (
+    <VStack>
+      <DragDropContext
+        onDragEnd={(result) => {
+          if (!result.destination) {
+            return;
+          }
+          const tags = Array.from(selected_tags);
+          const [removed] = tags.splice(result.source.index, 1);
+          tags.splice(result.destination.index, 0, removed);
+          onChange(tags.join(","));
+        }}
+      >
+        <Droppable droppableId="droppable">
+          {(provided) => {
+            const value = selected_tags;
+            const showBuiltin = value.length == 0;
+            const showingTags = showBuiltin ? ["built-in"] : value;
+            return (
+              <SimpleGrid
+                w="full"
+                {...provided.droppableProps}
+                ref={provided.innerRef}
+              >
+                {showingTags.map((tag, index) => {
+                  const entry = tagMap[tag] || {
+                    tag: tag,
+                    servers: ["Not Found"],
+                  };
+                  const server =
+                    entry.servers[0].split("->")[0].trimEnd() +
+                    (entry.servers.length > 1 ? "..." : "");
+                  let colorScheme = "primary";
+                  if (showBuiltin) {
+                    colorScheme = "gray";
+                  } else if (!tagMap[tag]) {
+                    colorScheme = "red";
+                  }
+                  return (
+                    <Draggable
+                      key={entry.tag}
+                      index={index}
+                      draggableId={entry.tag}
+                      isDragDisabled={showBuiltin}
+                    >
+                      {(provided) => (
+                        <Tag
+                          ref={provided.innerRef}
+                          {...provided.draggableProps}
+                          {...provided.dragHandleProps}
+                          w="fit-content"
+                          size="md"
+                          pl="3"
+                          pr="3"
+                          mb="1"
+                          borderRadius="full"
+                          variant="solid"
+                          cursor="default"
+                          colorScheme={colorScheme}
+                        >
+                          {!showBuiltin && (
+                            <TagLeftIcon boxSize="18px" as={RankIcon} />
+                          )}
+                          <Popover isLazy trigger="hover" placement="top">
+                            <PopoverTrigger>
+                              <Center height="full" cursor="default">
+                                <TagLabel>
+                                  {entry.tag}
+                                  {" -> "}
+                                  {server}
+                                </TagLabel>
+                              </Center>
+                            </PopoverTrigger>
+                            <PopoverContent w="full">
+                              <PopoverArrow />
+                              <SimpleGrid
+                                p="2"
+                                spacingY="1"
+                                pl="3"
+                                pr="3"
+                                w="full"
+                                alignItems="flex-start"
+                                color="gray.800"
+                                _dark={{
+                                  color: "whiteAlpha.900",
+                                }}
+                              >
+                                {entry.servers.map((value, index) => (
+                                  <Text key={index} fontSize="sm">
+                                    {value}
+                                  </Text>
+                                ))}
+                              </SimpleGrid>
+                            </PopoverContent>
+                          </Popover>
+                          {!showBuiltin && (
+                            <TagCloseButton
+                              onClick={() => {
+                                const tags = value.filter((v) => v !== tag);
+                                onChange(tags.join(","));
+                              }}
+                            />
+                          )}
+                        </Tag>
+                      )}
+                    </Draggable>
+                  );
+                })}
+                {provided.placeholder}
+              </SimpleGrid>
+            );
+          }}
+        </Droppable>
+      </DragDropContext>
+      {!hasAvailableTags && (
+        <VStack mt={3}>
+          <Text>{t("userDialog.noTags")}</Text>
+          <EmptyTagIcon
+            onClick={() => {
+              onEditingSubscription(true);
+              onCreateProxy(true);
+            }}
+            cursor="pointer"
+            boxSize="32px"
+            _dark={{
+              'path[fill="#ccc"]': {
+                fill: "primary.300",
+              },
+            }}
+            _light={{
+              'path[fill="#ccc"]': {
+                fill: "primary.500",
+              },
+            }}
+          />
+        </VStack>
+      )}
+      {hasAvailableTags && (
+        <VStack w="full">
+          <HStack w="full">
+            <InputGroup>
+              <InputLeftElement
+                height="8"
+                pointerEvents="none"
+                children={<SearchIcon />}
+              />
+              <Input
+                pl={10}
+                size="sm"
+                borderRadius="md"
+                placeholder={t("search")}
+                value={search}
+                borderColor="light-border"
+                onChange={onSearchChange}
+              />
+
+              <InputRightElement height="8">
+                {search.length > 0 && (
+                  <IconButton
+                    onClick={() => setSearch("")}
+                    aria-label="clear"
+                    size="xs"
+                    variant="ghost"
+                  >
+                    <ClearIcon />
+                  </IconButton>
+                )}
+              </InputRightElement>
+            </InputGroup>
+            <Box w="36px" />
+          </HStack>
+          <HStack w="full">
+            <Select ref={tagRef} size="sm">
+              {proxyTags.map((entry) => {
+                const value = selected_tags;
+                const exists = value.some((tag) => tag === entry.tag);
+                const builtin = entry.tag === "built-in";
+                const notfound =
+                  search &&
+                  entry.tag.toLowerCase().indexOf(search.toLowerCase()) < 0;
+                if (exists || builtin || notfound) {
+                  return null;
+                } else {
+                  return (
+                    <option key={entry.tag} value={entry.tag}>
+                      {entry.tag}
+                    </option>
+                  );
+                }
+              })}
+            </Select>
+            <IconButton
+              size="sm"
+              aria-label="Add Tags"
+              icon={<AddIcon />}
+              onClick={() => {
+                const value = selected_tags;
+                const newTag = tagRef.current!.value;
+                onChange([...value, newTag].join(","));
+              }}
+            />
+          </HStack>
+        </VStack>
+      )}
+    </VStack>
   );
 };

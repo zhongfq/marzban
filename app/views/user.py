@@ -8,7 +8,8 @@ from app import app, logger, xray
 from app.db import Session, crud, get_db
 from app.models.admin import Admin
 from app.models.user import (UserCreate, UserModify, UserResponse,
-                             UsersResponse, UserStatus, UserUsagesResponse)
+                             UsersResponse, UserStatus, UserUsagesResponse,
+                             UserUsageTop10Response)
 from app.utils import report
 
 
@@ -270,6 +271,29 @@ def reset_users_data_usage(db: Session = Depends(get_db),
             xray.operations.restart_node(node_id, startup_config)
     return {}
 
+@app.get("/api/user/usage/top10", tags=['User'], response_model=UserUsageTop10Response)
+def get_topusage(db: Session = Depends(get_db),
+              start: str = None,
+              end: str = None,
+              admin: Admin = Depends(Admin.get_current)):
+    """
+    Get top10 usage
+    """
+
+    if not admin.is_sudo:
+        raise HTTPException(status_code=403, detail="You're not allowed")
+
+    if start is None:
+        start_date = datetime.fromtimestamp(datetime.utcnow().timestamp() - 30 * 24 * 3600)
+    else:
+        start_date = datetime.fromisoformat(start)
+
+    if end is None:
+        end_date = datetime.utcnow()
+    else:
+        end_date = datetime.fromisoformat(end)
+
+    return crud.get_user_usage_top10(db, start_date, end_date)
 
 @app.get("/api/user/{username}/usage", tags=['User'], response_model=UserUsagesResponse)
 def get_user_usage(username: str,

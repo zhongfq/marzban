@@ -58,6 +58,10 @@ def user_subscription(token: str,
                 {"user": user}
             )
         )
+    
+    if len(user.sub_tags) > 0 and len(user.sub_url_prefix) > 0:
+        from app.views.clash import generate_subscription
+        return generate_subscription(db=db, dbuser=dbuser, user_agent=user_agent)
 
     response_headers = {
         "content-disposition": f'attachment; filename="{user.username}"',
