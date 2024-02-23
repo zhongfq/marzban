@@ -7,6 +7,8 @@ import sqlalchemy
 from fastapi import BackgroundTasks, Depends, HTTPException, WebSocket
 from starlette.websockets import WebSocketDisconnect
 
+from config import UVICORN_PORT
+from app.utils.share import SERVER_IP
 from app import app, logger, xray
 from app.db import Session, crud, get_db
 from app.models.admin import Admin
@@ -149,7 +151,18 @@ def get_nodes(db: Session = Depends(get_db),
               admin: Admin = Depends(Admin.get_current)):
     if not admin.is_sudo:
         raise HTTPException(status_code=403, detail="You're not allowed")
-    return crud.get_nodes(db)
+    nodes = [v for v in crud.get_nodes(db)]
+    nodes.insert(0, NodeResponse(
+        id=0,
+        name="Master",
+        address=SERVER_IP,
+        port=UVICORN_PORT,
+        api_port=xray.config.api_port,
+        xray_version=xray.core.get_version(),
+        status=NodeStatus.connected if xray.core.started else NodeStatus.error,
+    ))
+    return nodes
+
 
 
 @app.put("/api/node/{node_id}", tags=['Node'], response_model=NodeResponse)
