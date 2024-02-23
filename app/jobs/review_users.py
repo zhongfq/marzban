@@ -90,4 +90,4 @@ def review():
             logger.info(f"User \"{user.username}\" status changed to {status}")
 
 
-scheduler.add_job(review, 'interval', seconds=5, coalesce=True, max_instances=1)
+scheduler.add_job(review, 'interval', seconds=10, coalesce=True, max_instances=1)
