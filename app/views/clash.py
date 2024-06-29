@@ -10,7 +10,7 @@ from fastapi import Depends, Response, HTTPException, status
 from app import app, logger, xray
 from app.db import Session, crud, get_db
 from app.db.models import User
-from app.utils.share import SERVER_IP, get_v2ray_link
+from app.subscription.share import SERVER_IP, get_v2ray_link
 
 from app.models.user import UserResponse
 from app.models.admin import Admin

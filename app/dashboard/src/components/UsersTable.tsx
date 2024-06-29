@@ -307,6 +307,7 @@ export const UsersTable: FC<UsersTableProps> = (props) => {
                   >
                     <option></option>
                     <option>active</option>
+                    <option>on_hold</option>
                     <option>disabled</option>
                     <option>limited</option>
                     <option>expired</option>
@@ -345,10 +346,16 @@ export const UsersTable: FC<UsersTableProps> = (props) => {
                       onClick={toggleAccordion.bind(null, i)}
                       cursor="pointer"
                     >
-                      <Td borderBottom={0} minW="100px" pl={4} pr={4}>
+                      <Td
+                        borderBottom={0}
+                        minW="100px"
+                        pl={4}
+                        pr={4}
+                        maxW="calc(100vw - 50px - 32px - 100px - 48px)"
+                      >
                         <div className="flex-status">
                           <OnlineBadge lastOnline={user.online_at} />
-                          {user.username}
+                          <Text isTruncated>{user.username}</Text>
                         </div>
                       </Td>
                       <Td borderBottom={0} minW="50px" pl={0} pr={0}>
@@ -539,6 +546,7 @@ export const UsersTable: FC<UsersTableProps> = (props) => {
                 >
                   <option></option>
                   <option>active</option>
+                  <option>on_hold</option>
                   <option>disabled</option>
                   <option>limited</option>
                   <option>expired</option>

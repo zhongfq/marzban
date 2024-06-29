@@ -8,7 +8,7 @@ from fastapi import BackgroundTasks, Depends, HTTPException, WebSocket
 from starlette.websockets import WebSocketDisconnect
 
 from config import UVICORN_PORT
-from app.utils.share import SERVER_IP
+from app.subscription.share import SERVER_IP
 from app import app, logger, xray
 from app.db import Session, crud, get_db
 from app.models.admin import Admin
