@@ -47,6 +47,8 @@ export type ProxySettings = {
     servername: string;
     alpn: string;
     udp: boolean;
+    ws_opts_path?: string;
+    ws_opts_host?: string;
   };
   shadowsocks?: {
     udp: boolean;

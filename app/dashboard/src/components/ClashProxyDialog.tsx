@@ -33,7 +33,7 @@ import {
   Tooltip,
   VStack,
   chakra,
-  useToast
+  useToast,
 } from "@chakra-ui/react";
 import { PencilIcon, PlusIcon } from "@heroicons/react/24/outline";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -113,6 +113,8 @@ const getDefaultValues = (): FormType => {
         alpn: "",
         udp: true,
         allow_insecure: false,
+        ws_opts_path: "",
+        ws_opts_host: "",
       },
       shadowsocks: {
         udp: true,
@@ -615,6 +617,39 @@ export const ClashProxyDialog: FC<ClashProxyDialogProps> = () => {
                                     )}
                                   />
                                 )}
+                                {inbound.type == "vmess" &&
+                                  inbound.network == "ws" && (
+                                    <HStack w="full" paddingTop="8px">
+                                      <FormControl>
+                                        <FormLabel>
+                                          {t("clash.proxy.host")}
+                                        </FormLabel>
+                                        <Input
+                                          size="sm"
+                                          type="text"
+                                          borderRadius="6px"
+                                          disabled={disabled}
+                                          {...form.register(
+                                            `settings.vmess.ws_opts_host`
+                                          )}
+                                        />
+                                      </FormControl>
+                                      <FormControl w="50%">
+                                        <FormLabel>
+                                          {t("clash.proxy.path")}
+                                        </FormLabel>
+                                        <Input
+                                          size="sm"
+                                          type="text"
+                                          borderRadius="6px"
+                                          disabled={disabled}
+                                          {...form.register(
+                                            `settings.vmess.ws_opts_path`
+                                          )}
+                                        />
+                                      </FormControl>
+                                    </HStack>
+                                  )}
                               </FormControl>
                             )}
                             <HStack w="full">

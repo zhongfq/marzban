@@ -751,11 +751,12 @@ class ClashConfig:
             node["flow"] = None
 
         if network == "ws":
-            path = R(inbound, "path") or "/"
+            path = R(settings, "ws_opts_path") or R(inbound, "path") or "/"
+            host = R(settings, "ws_opts_host") or R(inbound, "host")
             node["ws-opts"] = {
                 "path": path,
                 "headers": {
-                    "Host": R(inbound, "host"),
+                    "Host": host,
                 }
             }
         elif network == "grpc":                
