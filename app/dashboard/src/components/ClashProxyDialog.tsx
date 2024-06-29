@@ -97,6 +97,7 @@ const getDefaultValues = (): FormType => {
         alpn: "",
         sni: "",
         allow_insecure: false,
+        hidden: false,
       },
       vless: {
         security: "tls",
@@ -105,6 +106,7 @@ const getDefaultValues = (): FormType => {
         alpn: "",
         udp: true,
         allow_insecure: false,
+        hidden: false,
       },
       vmess: {
         security: "tls",
@@ -115,9 +117,11 @@ const getDefaultValues = (): FormType => {
         allow_insecure: false,
         ws_opts_path: "",
         ws_opts_host: "",
+        hidden: false,
       },
       shadowsocks: {
         udp: true,
+        hidden: false,
       },
     },
   };
@@ -732,6 +736,23 @@ export const ClashProxyDialog: FC<ClashProxyDialogProps> = () => {
                                 colorScheme="primary"
                                 {...form.register(
                                   `settings.${inbound.type}.udp`
+                                )}
+                              />
+                            </FormControl>
+                          </HStack>
+                        )}
+                        {inbound !== null && (
+                          <HStack pt={1} w="full" gap="4">
+                            <FormControl
+                              w="fit-content"
+                              display="flex"
+                              alignItems="center"
+                            >
+                              <FormLabel mb="0">{t("clash.proxy.hidden")}</FormLabel>
+                              <Switch
+                                colorScheme="primary"
+                                {...form.register(
+                                  `settings.${inbound.type}.hidden`
                                 )}
                               />
                             </FormControl>

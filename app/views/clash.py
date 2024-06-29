@@ -963,6 +963,24 @@ class ClashConfig:
                 inbound = xray.config.inbounds_by_tag.get(proxy.inbound)
                 if inbound["protocol"] != "vless" or self.is_support_vless(inbound):
                     return proxy
+                
+    def is_hidden(self, proxy: Proxy):
+        if not self.active_inbounds.get(proxy.inbound):
+            return False
+        
+        inbound = xray.config.inbounds_by_tag.get(proxy.inbound)
+        ibtype = R(inbound, "protocol")
+
+        if ibtype == "trojan":
+            return R(proxy.settings, "trojan.hidden") == True
+        elif ibtype == "shadowsocks":
+            return R(proxy.settings, "shadowsocks.hidden") == True
+        elif ibtype == "vmess":
+            return R(proxy.settings, "vmess.hidden") == True
+        elif ibtype == "vless":
+            return R(proxy.settings, "vless.hidden") == True
+        else:
+            return False
 
     def write_proxies(self):
         node_names = []
@@ -991,10 +1009,12 @@ class ClashConfig:
                         "proxies": lb_nodes,
                     })
                     proxy.exported = True
-                    node_names.append(proxy.name)
+                    if not self.is_hidden(proxy):
+                        node_names.append(proxy.name)
             elif self.write_proxy(proxy):
                 proxy.exported = True
-                node_names.append(proxy.name)
+                if not self.is_hidden(proxy):
+                    node_names.append(proxy.name)
 
         for proxy_group in self.proxy_groups:
             if proxy_group.builtin:

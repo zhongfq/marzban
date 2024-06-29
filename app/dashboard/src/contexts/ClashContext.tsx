@@ -23,7 +23,7 @@ export type ProxyInbound = {
 };
 
 export type ProxySettings = {
-  icon?: string;
+  icon?: string; // used in range ports
   trojan?: {
     security: "none" | "tls"; // | "reality";
     fingerprint: string;
@@ -31,6 +31,7 @@ export type ProxySettings = {
     alpn: string;
     sni: string;
     allow_insecure?: boolean;
+    hidden?: boolean; // hidden in builtin groups
   };
   vless?: {
     security: "none" | "tls"; // | "reality";
@@ -39,6 +40,7 @@ export type ProxySettings = {
     alpn: string;
     udp: boolean;
     allow_insecure: boolean;
+    hidden?: boolean; // hidden in builtin groups
   };
   vmess?: {
     security: "none" | "tls"; // | "reality";
@@ -49,9 +51,11 @@ export type ProxySettings = {
     udp: boolean;
     ws_opts_path?: string;
     ws_opts_host?: string;
+    hidden?: boolean; // hidden in builtin groups
   };
   shadowsocks?: {
     udp: boolean;
+    hidden?: boolean; // hidden in builtin groups
   };
 };
 
