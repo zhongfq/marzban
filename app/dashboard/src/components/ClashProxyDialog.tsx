@@ -85,7 +85,6 @@ const getDefaultValues = (): FormType => {
     id: 0,
     name: "",
     server: "",
-    builtin: false,
     inbound: "",
     tag: "",
     port: "",
@@ -225,7 +224,6 @@ export const ClashProxyDialog: FC<ClashProxyDialogProps> = () => {
     let body: Proxy = {
       ...rest,
       id: editingProxy?.id,
-      builtin: false,
       settings: settings,
     };
 
@@ -287,17 +285,11 @@ export const ClashProxyDialog: FC<ClashProxyDialogProps> = () => {
 
   const onDeletingProxy = () => {
     let alert: any = {};
-    if (editingProxy?.builtin) {
-      alert.title = "clash.proxy.deleteOrReset";
-      alert.prompt = "clash.proxy.deleteBuiltinPrompt";
-      alert.yes = "confirm";
-      alert.success = "clash.proxy.resetSuccess";
-    } else {
-      alert.title = "clash.proxy.delete";
-      alert.prompt = "clash.proxy.deletePrompt";
-      alert.yes = "delete";
-      alert.success = "clash.proxy.deleteSuccess";
-    }
+
+    alert.title = "clash.proxy.delete";
+    alert.prompt = "clash.proxy.deletePrompt";
+    alert.yes = "delete";
+    alert.success = "clash.proxy.deleteSuccess";
     onAlert({
       title: t(alert.title),
       content: t(alert.prompt, { name: editingProxy?.name }),
@@ -425,7 +417,7 @@ export const ClashProxyDialog: FC<ClashProxyDialogProps> = () => {
                   <FormControl isInvalid={!!form.formState.errors.inbound}>
                     <FormLabel>{t("clash.inbound")}</FormLabel>
                     <Select
-                      disabled={disabled || editingProxy?.builtin}
+                      disabled={disabled}
                       size="sm"
                       placeholder="Select inbound"
                       {...form.register("inbound", {
@@ -465,24 +457,13 @@ export const ClashProxyDialog: FC<ClashProxyDialogProps> = () => {
                       <FormLabel mr="0" mb="0">
                         {t("tag")}
                       </FormLabel>
-                      <Popover isLazy placement="right">
-                        <PopoverTrigger>
-                          <InfoIcon />
-                        </PopoverTrigger>
-                        <PopoverContent>
-                          <PopoverArrow />
-                          <Text fontSize="xs" p="2">
-                            {t("clash.proxy.tag.info")}
-                          </Text>
-                        </PopoverContent>
-                      </Popover>
                     </HStack>
                     <Input
                       size="sm"
                       type="text"
                       borderRadius="6px"
                       placeholder="bwh-aws"
-                      disabled={disabled || editingProxy?.builtin}
+                      disabled={disabled}
                       {...form.register("tag")}
                     />
                     <FormErrorMessage>
@@ -748,7 +729,9 @@ export const ClashProxyDialog: FC<ClashProxyDialogProps> = () => {
                               display="flex"
                               alignItems="center"
                             >
-                              <FormLabel mb="0">{t("clash.proxy.hidden")}</FormLabel>
+                              <FormLabel mb="0">
+                                {t("clash.proxy.hidden")}
+                              </FormLabel>
                               <Switch
                                 colorScheme="primary"
                                 {...form.register(
@@ -784,14 +767,12 @@ export const ClashProxyDialog: FC<ClashProxyDialogProps> = () => {
                       </IconButton>
                     </Tooltip>
                     <Tooltip
-                      isDisabled={editingProxy.builtin}
-                      label={t("duplicate")}
+                      label={t("clash.duplicate")}
                       placement="top"
                     >
                       <IconButton
                         aria-label="duplicate proxy"
                         size="sm"
-                        isDisabled={editingProxy.builtin}
                         onClick={() => onDuplicatingProxy(editingProxy!)}
                       >
                         <DuplicateIcon />
@@ -817,7 +798,7 @@ export const ClashProxyDialog: FC<ClashProxyDialogProps> = () => {
                     w="full"
                     isDisabled={disabled || !form.formState.isDirty}
                   >
-                    {isEditing ? t("update") : t("create")}
+                    {isEditing ? t("clash.update") : t("create")}
                   </Button>
                 </HStack>
               </HStack>

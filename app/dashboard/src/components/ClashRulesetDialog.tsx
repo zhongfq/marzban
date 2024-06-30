@@ -432,7 +432,7 @@ export const ClashRulesetDialog: FC<ClashRulesetDialogProps> = () => {
                     w="full"
                     isDisabled={disabled || !form.formState.isDirty}
                   >
-                    {isEditing ? t("update") : t("create")}
+                    {isEditing ? t("clash.update") : t("create")}
                   </Button>
                 </HStack>
               </HStack>

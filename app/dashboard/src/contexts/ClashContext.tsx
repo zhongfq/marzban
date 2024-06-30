@@ -63,14 +63,13 @@ export type Proxy = {
   id?: number;
   name: string;
   server: string;
-  builtin: boolean;
   inbound: string;
   tag?: string;
   port: string;
   settings: ProxySettings;
 };
 
-export type ProxyBrief = Pick<Proxy, "name" | "server" | "tag" | "builtin"> & {
+export type ProxyBrief = Pick<Proxy, "name" | "server" | "tag"> & {
   id: string;
 };
 

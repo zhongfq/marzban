@@ -907,8 +907,6 @@ const ProxyTags: FC<ProxyTagsProps> = ({ tags, onChange }) => {
     {}
   );
 
-  const hasAvailableTags = !proxyTags.every((v) => v.tag == "built-in");
-
   const tagRef = useRef<HTMLSelectElement>(null);
   const [search, setSearch] = useState("");
   const onSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -931,15 +929,13 @@ const ProxyTags: FC<ProxyTagsProps> = ({ tags, onChange }) => {
         <Droppable droppableId="droppable">
           {(provided) => {
             const value = selected_tags;
-            const showBuiltin = value.length == 0;
-            const showingTags = showBuiltin ? ["built-in"] : value;
             return (
               <SimpleGrid
                 w="full"
                 {...provided.droppableProps}
                 ref={provided.innerRef}
               >
-                {showingTags.map((tag, index) => {
+                {value.map((tag, index) => {
                   const entry = tagMap[tag] || {
                     tag: tag,
                     servers: ["Not Found"],
@@ -948,9 +944,7 @@ const ProxyTags: FC<ProxyTagsProps> = ({ tags, onChange }) => {
                     entry.servers[0].split("->")[0].trimEnd() +
                     (entry.servers.length > 1 ? "..." : "");
                   let colorScheme = "primary";
-                  if (showBuiltin) {
-                    colorScheme = "gray";
-                  } else if (!tagMap[tag]) {
+                  if (!tagMap[tag]) {
                     colorScheme = "red";
                   }
                   return (
@@ -958,7 +952,6 @@ const ProxyTags: FC<ProxyTagsProps> = ({ tags, onChange }) => {
                       key={entry.tag}
                       index={index}
                       draggableId={entry.tag}
-                      isDragDisabled={showBuiltin}
                     >
                       {(provided) => (
                         <Tag
@@ -975,9 +968,7 @@ const ProxyTags: FC<ProxyTagsProps> = ({ tags, onChange }) => {
                           cursor="default"
                           colorScheme={colorScheme}
                         >
-                          {!showBuiltin && (
-                            <TagLeftIcon boxSize="18px" as={RankIcon} />
-                          )}
+                          <TagLeftIcon boxSize="18px" as={RankIcon} />
                           <Popover isLazy trigger="hover" placement="top">
                             <PopoverTrigger>
                               <Center height="full" cursor="default">
@@ -1010,14 +1001,12 @@ const ProxyTags: FC<ProxyTagsProps> = ({ tags, onChange }) => {
                               </SimpleGrid>
                             </PopoverContent>
                           </Popover>
-                          {!showBuiltin && (
-                            <TagCloseButton
-                              onClick={() => {
-                                const tags = value.filter((v) => v !== tag);
-                                onChange(tags.join(","));
-                              }}
-                            />
-                          )}
+                          <TagCloseButton
+                            onClick={() => {
+                              const tags = value.filter((v) => v !== tag);
+                              onChange(tags.join(","));
+                            }}
+                          />
                         </Tag>
                       )}
                     </Draggable>
@@ -1029,7 +1018,7 @@ const ProxyTags: FC<ProxyTagsProps> = ({ tags, onChange }) => {
           }}
         </Droppable>
       </DragDropContext>
-      {!hasAvailableTags && (
+      {proxyTags.length == 0 && (
         <VStack mt={3}>
           <Text>{t("userDialog.noTags")}</Text>
           <EmptyTagIcon
@@ -1052,7 +1041,7 @@ const ProxyTags: FC<ProxyTagsProps> = ({ tags, onChange }) => {
           />
         </VStack>
       )}
-      {hasAvailableTags && (
+      {proxyTags.length > 0 && (
         <VStack w="full">
           <HStack w="full">
             <InputGroup>
@@ -1091,11 +1080,10 @@ const ProxyTags: FC<ProxyTagsProps> = ({ tags, onChange }) => {
               {proxyTags.map((entry) => {
                 const value = selected_tags;
                 const exists = value.some((tag) => tag === entry.tag);
-                const builtin = entry.tag === "built-in";
                 const notfound =
                   search &&
                   entry.tag.toLowerCase().indexOf(search.toLowerCase()) < 0;
-                if (exists || builtin || notfound) {
+                if (exists || notfound) {
                   return null;
                 } else {
                   return (

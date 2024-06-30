@@ -459,10 +459,7 @@ export const ClashProxyGroupDialog: FC<ClashProxyGroupDialogProps> = () => {
                                   colorScheme = "red";
                                 } else if (proxy.id.startsWith("#")) {
                                   colorScheme = "green";
-                                } else if (
-                                  proxy.builtin &&
-                                  proxy.id !== "..."
-                                ) {
+                                } else if (proxy.id !== "...") {
                                   colorScheme = "purple";
                                 }
                                 return (
@@ -617,12 +614,7 @@ export const ClashProxyGroupDialog: FC<ClashProxyGroupDialogProps> = () => {
                               search &&
                               name.toLowerCase().indexOf(search.toLowerCase()) <
                                 0;
-                            if (
-                              exists ||
-                              proxy.builtin ||
-                              proxy.id == id ||
-                              notfound
-                            ) {
+                            if (exists || proxy.id == id || notfound) {
                               return null;
                             } else {
                               return (
@@ -871,7 +863,7 @@ export const ClashProxyGroupDialog: FC<ClashProxyGroupDialogProps> = () => {
                     </Tooltip>
                     <Tooltip
                       isDisabled={editingProxyGroup.builtin}
-                      label={t("duplicate")}
+                      label={t("clash.duplicate")}
                       placement="top"
                     >
                       <IconButton
@@ -905,7 +897,7 @@ export const ClashProxyGroupDialog: FC<ClashProxyGroupDialogProps> = () => {
                     w="full"
                     isDisabled={disabled || !form.formState.isDirty}
                   >
-                    {isEditing ? t("update") : t("create")}
+                    {isEditing ? t("clash.update") : t("create")}
                   </Button>
                 </HStack>
               </HStack>
