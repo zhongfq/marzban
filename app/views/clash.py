@@ -930,6 +930,7 @@ class ClashConfig:
             "name": obj.name,
             "type": obj.type,
             "icon": R(obj.settings, "icon"),
+            "hidden": R(obj.settings, "hidden"),
             "proxies": node_names,
         }
         self.config["proxy-groups"].append(group)
@@ -967,20 +968,8 @@ class ClashConfig:
     def is_hidden(self, proxy: Proxy):
         if not self.active_inbounds.get(proxy.inbound):
             return False
-        
-        inbound = xray.config.inbounds_by_tag.get(proxy.inbound)
-        ibtype = R(inbound, "protocol")
 
-        if ibtype == "trojan":
-            return R(proxy.settings, "trojan.hidden") == True
-        elif ibtype == "shadowsocks":
-            return R(proxy.settings, "shadowsocks.hidden") == True
-        elif ibtype == "vmess":
-            return R(proxy.settings, "vmess.hidden") == True
-        elif ibtype == "vless":
-            return R(proxy.settings, "vless.hidden") == True
-        else:
-            return False
+        return R(proxy.settings, "hidden") == True
 
     def write_proxies(self):
         node_names = []

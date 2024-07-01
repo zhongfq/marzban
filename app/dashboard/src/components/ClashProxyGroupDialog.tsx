@@ -688,6 +688,21 @@ export const ClashProxyGroupDialog: FC<ClashProxyGroupDialogProps> = () => {
                     </AccordionButton>
                     <AccordionPanel w="full" p={1}>
                       <VStack w="full">
+                        <HStack pt={1} w="full" gap="4">
+                          <FormControl
+                            w="fit-content"
+                            display="flex"
+                            alignItems="center"
+                          >
+                            <FormLabel mb="0">
+                              {t("clash.hidden")}
+                            </FormLabel>
+                            <Switch
+                              colorScheme="primary"
+                              {...form.register(`settings.hidden`)}
+                            />
+                          </FormControl>
+                        </HStack>
                         <FormControl>
                           <FormLabel>{t("clash.icon")}</FormLabel>
                           <Input

@@ -89,6 +89,8 @@ const getDefaultValues = (): FormType => {
     tag: "",
     port: "",
     settings: {
+      icon: "",
+      hidden: false,
       trojan: {
         security: "tls",
         fingerprint: "chrome",
@@ -96,7 +98,6 @@ const getDefaultValues = (): FormType => {
         alpn: "",
         sni: "",
         allow_insecure: false,
-        hidden: false,
       },
       vless: {
         security: "tls",
@@ -105,7 +106,6 @@ const getDefaultValues = (): FormType => {
         alpn: "",
         udp: true,
         allow_insecure: false,
-        hidden: false,
       },
       vmess: {
         security: "tls",
@@ -116,11 +116,9 @@ const getDefaultValues = (): FormType => {
         allow_insecure: false,
         ws_opts_path: "",
         ws_opts_host: "",
-        hidden: false,
       },
       shadowsocks: {
         udp: true,
-        hidden: false,
       },
     },
   };
@@ -206,6 +204,7 @@ export const ClashProxyDialog: FC<ClashProxyDialogProps> = () => {
     if (values.settings.icon) {
       settings.icon = values.settings.icon;
     }
+    settings.hidden = values.settings.hidden;
     if (inbound?.type == "trojan") {
       settings.trojan = values.settings.trojan;
       removeUndefined(settings.trojan, defaultSettings.trojan);
@@ -548,6 +547,33 @@ export const ClashProxyDialog: FC<ClashProxyDialogProps> = () => {
                     </AccordionButton>
                     <AccordionPanel w="full" p={1}>
                       <VStack w="full">
+                        <HStack pt={1} w="full" gap="4">
+                          <FormControl
+                            w="fit-content"
+                            display="flex"
+                            alignItems="center"
+                          >
+                            <FormLabel mb="0">
+                              {t("clash.hidden")}
+                              <Popover isLazy trigger="hover" placement="right">
+                                <PopoverTrigger>
+                                  <InfoIcon display="inline-block" />
+                                </PopoverTrigger>
+                                <PopoverContent>
+                                  <PopoverArrow />
+                                  <Text fontSize="xs" p="2">
+                                    {t("clash.proxy.hiddenInfo")}
+                                  </Text>
+                                </PopoverContent>
+                              </Popover>
+                            </FormLabel>
+
+                            <Switch
+                              colorScheme="primary"
+                              {...form.register(`settings.hidden`)}
+                            />
+                          </FormControl>
+                        </HStack>
                         {port.indexOf(":") > 0 && (
                           <FormControl>
                             <FormLabel>{t("clash.icon")}</FormLabel>
@@ -722,25 +748,6 @@ export const ClashProxyDialog: FC<ClashProxyDialogProps> = () => {
                             </FormControl>
                           </HStack>
                         )}
-                        {inbound !== null && (
-                          <HStack pt={1} w="full" gap="4">
-                            <FormControl
-                              w="fit-content"
-                              display="flex"
-                              alignItems="center"
-                            >
-                              <FormLabel mb="0">
-                                {t("clash.proxy.hidden")}
-                              </FormLabel>
-                              <Switch
-                                colorScheme="primary"
-                                {...form.register(
-                                  `settings.${inbound.type}.hidden`
-                                )}
-                              />
-                            </FormControl>
-                          </HStack>
-                        )}
                       </VStack>
                     </AccordionPanel>
                   </AccordionItem>
@@ -766,10 +773,7 @@ export const ClashProxyDialog: FC<ClashProxyDialogProps> = () => {
                         <DeleteIcon />
                       </IconButton>
                     </Tooltip>
-                    <Tooltip
-                      label={t("clash.duplicate")}
-                      placement="top"
-                    >
+                    <Tooltip label={t("clash.duplicate")} placement="top">
                       <IconButton
                         aria-label="duplicate proxy"
                         size="sm"
