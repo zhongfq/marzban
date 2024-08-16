@@ -35,7 +35,7 @@ class ClashSettingsResponse(BaseModel):
 class ClashProxy(BaseModel):
     name: str
     server: str
-    builtin: bool
+    builtin: Optional[bool] = False
     tag: str
     port: str
     inbound: str
