@@ -5,12 +5,12 @@ import secrets
 import random
 from typing import Dict, Optional
 import sqlalchemy
-from fastapi import Depends, Response, HTTPException, status
+from fastapi import Depends, Response, HTTPException, status, APIRouter
 
 from app import app, logger, xray
 from app.db import Session, crud, get_db
 from app.db.models import User
-from app.subscription.share import SERVER_IP, get_v2ray_link
+from app.subscription.share import SERVER_IP
 
 from app.models.user import UserResponse
 from app.models.admin import Admin
@@ -22,6 +22,8 @@ from app.models.clash import (ClashRulesResponse, ClashRuleResponse,
     ClashProxyResponse, ClashProxyCreate, ClashProxyInboundResponse, 
     ClashProxyInboundsResponse, ClashSettingResponse, ClashSettingCreate,
     ClashProxyTagResponse, ClashProxyBriefsResponse, ClashSettingsResponse)
+
+router = APIRouter(tags=['Clash'], prefix='/api')
 
 RULESET_POLICIES = ["DIRECT", "PROXY", "REJECT"]
 RULE_POLICIES = ["", "DIRECT", "PROXY", "REJECT"]
@@ -39,7 +41,7 @@ def HTTPException404(msg: str):
 def HTTPException409(err: str, msg: str):
     return HTTPException(status_code=status.HTTP_409_CONFLICT, detail={"err": err, "message": msg})
 
-@app.post("/api/clash/rule", tags=['Clash'], response_model=ClashRuleResponse)
+@router.post("/clash/rule", tags=['Clash'], response_model=ClashRuleResponse)
 def add_clash_rule(created: ClashRuleCreate,
              db: Session = Depends(get_db),
              admin: Admin = Depends(Admin.get_current)):
@@ -64,7 +66,7 @@ def add_clash_rule(created: ClashRuleCreate,
     logger.info(f"New rule \"{dbrule.content}\" added")
     return dbrule
 
-@app.put("/api/clash/rule/{id}", tags=['Clash'], response_model=ClashRuleResponse)
+@router.put("/clash/rule/{id}", tags=['Clash'], response_model=ClashRuleResponse)
 def modify_clash_rule(id: int,
                 modified: ClashRuleCreate,
                 db: Session = Depends(get_db),
@@ -91,7 +93,7 @@ def modify_clash_rule(id: int,
 
     return dbrule
 
-@app.delete("/api/clash/rule/{id}", tags=['Clash'])
+@router.delete("/clash/rule/{id}", tags=['Clash'])
 def delete_clash_rule(id: int,
                 db: Session = Depends(get_db),
                 admin: Admin = Depends(Admin.get_current)):
@@ -106,7 +108,7 @@ def delete_clash_rule(id: int,
 
     return {}
 
-@app.post("/api/clash/ruleset", tags=['Clash'], response_model=ClashRulesetResponse)
+@router.post("/clash/ruleset", tags=['Clash'], response_model=ClashRulesetResponse)
 def add_clash_ruleset(created: ClashRulesetCreate,
              db: Session = Depends(get_db),
              admin: Admin = Depends(Admin.get_current)):
@@ -121,7 +123,7 @@ def add_clash_ruleset(created: ClashRulesetCreate,
     logger.info(f"New ruleset \"{dbruleset.name}\" added")
     return dbruleset
 
-@app.put("/api/clash/ruleset/{id}", tags=['Clash'], response_model=ClashRulesetResponse)
+@router.put("/clash/ruleset/{id}", tags=['Clash'], response_model=ClashRulesetResponse)
 def modify_clash_ruleset(id: int,
                 modified: ClashRulesetCreate,
                 db: Session = Depends(get_db),
@@ -144,7 +146,7 @@ def modify_clash_ruleset(id: int,
 
     return dbruleset
 
-@app.delete("/api/clash/ruleset/{id}", tags=['Clash'])
+@router.delete("/clash/ruleset/{id}", tags=['Clash'])
 def delete_clash_ruleset(id: int,
                 db: Session = Depends(get_db),
                 admin: Admin = Depends(Admin.get_current)):
@@ -159,7 +161,7 @@ def delete_clash_ruleset(id: int,
 
     return {}
 
-@app.get("/api/clash/rules", tags=['Clash'], response_model=ClashRulesResponse)
+@router.get("/clash/rules", tags=['Clash'], response_model=ClashRulesResponse)
 def get_clash_rules(offset: int = None,
               limit: int = None,
               search: str = None,
@@ -190,7 +192,7 @@ def get_clash_rules(offset: int = None,
     return {"data": data, "total": count}
 
 
-@app.get("/api/clash/rulesets", tags=['Clash'], response_model=ClashRulesetsResponse)
+@router.get("/clash/rulesets", tags=['Clash'], response_model=ClashRulesetsResponse)
 def get_clash_rulesets(db: Session = Depends(get_db),
               admin: Admin = Depends(Admin.get_current)):
     """
@@ -216,7 +218,7 @@ def get_clash_rulesets(db: Session = Depends(get_db),
 
     return {"data": data}
 
-@app.get("/api/clash/proxies", tags=['Clash'], response_model=ClashProxiesResponse)
+@router.get("/clash/proxies", tags=['Clash'], response_model=ClashProxiesResponse)
 def get_clash_proxies(offset: int = None,
               limit: int = None,
               search: str = None,
@@ -244,7 +246,7 @@ def get_clash_proxies(offset: int = None,
 
     return {"data": data, "total": count}
 
-@app.post("/api/clash/proxy", tags=['Clash'], response_model=ClashProxyResponse)
+@router.post("/clash/proxy", tags=['Clash'], response_model=ClashProxyResponse)
 def add_clash_proxy(created: ClashProxyCreate,
              db: Session = Depends(get_db),
              admin: Admin = Depends(Admin.get_current)):
@@ -260,7 +262,7 @@ def add_clash_proxy(created: ClashProxyCreate,
     logger.info(f"New proxy \"{dbproxy.name}\" added")
     return dbproxy
 
-@app.put("/api/clash/proxy/{id}", tags=['Clash'], response_model=ClashProxyResponse)
+@router.put("/clash/proxy/{id}", tags=['Clash'], response_model=ClashProxyResponse)
 def modify_clash_proxy(id: int,
                 modified: ClashProxyCreate,
                 db: Session = Depends(get_db),
@@ -282,7 +284,7 @@ def modify_clash_proxy(id: int,
 
     return dbproxy
 
-@app.delete("/api/clash/proxy/{id}", tags=['Clash'])
+@router.delete("/clash/proxy/{id}", tags=['Clash'])
 def delete_clash_proxy(id: int,
                 db: Session = Depends(get_db),
                 admin: Admin = Depends(Admin.get_current)):
@@ -296,7 +298,7 @@ def delete_clash_proxy(id: int,
     logger.info(f"Proxy \"{dbproxy.id}\" deleted")
     return {}
 
-@app.post("/api/clash/proxy/group", tags=['Clash'], response_model=ClashProxyGroupResponse)
+@router.post("/clash/proxy/group", tags=['Clash'], response_model=ClashProxyGroupResponse)
 def add_clash_proxy_group(created: ClashProxyGroupCreate,
              db: Session = Depends(get_db),
              admin: Admin = Depends(Admin.get_current)):
@@ -311,7 +313,7 @@ def add_clash_proxy_group(created: ClashProxyGroupCreate,
     logger.info(f"New proxy group \"{dbproxy_group.name}\" added")
     return dbproxy_group
 
-@app.put("/api/clash/proxy/group/{id}", tags=['Clash'], response_model=ClashProxyGroupResponse)
+@router.put("/clash/proxy/group/{id}", tags=['Clash'], response_model=ClashProxyGroupResponse)
 def modify_clash_proxy_group(id: int,
                 modified: ClashProxyGroupCreate,
                 db: Session = Depends(get_db),
@@ -330,7 +332,7 @@ def modify_clash_proxy_group(id: int,
 
     return dbproxy_group
 
-@app.delete("/api/clash/proxy/group/{id}", tags=['Clash'])
+@router.delete("/clash/proxy/group/{id}", tags=['Clash'])
 def delete_clash_proxy_group(id: int,
                 db: Session = Depends(get_db),
                 admin: Admin = Depends(Admin.get_current)):
@@ -348,7 +350,7 @@ def delete_clash_proxy_group(id: int,
 
     return {}
 
-@app.get("/api/clash/proxy/groups", tags=['Clash'], response_model=ClashProxyGroupsResponse)
+@router.get("/clash/proxy/groups", tags=['Clash'], response_model=ClashProxyGroupsResponse)
 def get_clash_proxy_groups(offset: int = None,
               limit: int = None,
               search: str = None,
@@ -376,7 +378,7 @@ def get_clash_proxy_groups(offset: int = None,
 
     return {"data": data, "total": count}
 
-@app.get("/api/clash/proxy/briefs", tags=['Clash'], response_model=ClashProxyBriefsResponse)
+@router.get("/clash/proxy/briefs", tags=['Clash'], response_model=ClashProxyBriefsResponse)
 def get_clash_proxy_briefs(db: Session = Depends(get_db),
               admin: Admin = Depends(Admin.get_current)):
     briefs = []
@@ -422,7 +424,7 @@ def get_clash_proxy_briefs(db: Session = Depends(get_db),
 
     return {"data": briefs}
 
-@app.get("/api/clash/proxy/tags", tags=['Clash'], response_model=ClashProxyTagsResponse)
+@router.get("/clash/proxy/tags", tags=['Clash'], response_model=ClashProxyTagsResponse)
 def get_clash_proxy_tags(db: Session = Depends(get_db),
               admin: Admin = Depends(Admin.get_current)):
     tags = []
@@ -448,7 +450,7 @@ def get_clash_proxy_tags(db: Session = Depends(get_db),
 
     return {"data": tags}
     
-@app.get("/api/clash/proxy/inbounds", tags=['Clash'], response_model=ClashProxyInboundsResponse)
+@router.get("/clash/proxy/inbounds", tags=['Clash'], response_model=ClashProxyInboundsResponse)
 def get_clash_proxy_inbounds(db: Session = Depends(get_db),
               admin: Admin = Depends(Admin.get_current)):
     inbounds = []
@@ -473,7 +475,7 @@ def get_clash_proxy_inbounds(db: Session = Depends(get_db),
 
     return {"data": inbounds}
 
-@app.get("/api/clash/settings", tags=['Clash'], response_model=ClashSettingsResponse)
+@router.get("/clash/settings", tags=['Clash'], response_model=ClashSettingsResponse)
 def get_clash_settings(
              db: Session = Depends(get_db),
              admin: Admin = Depends(Admin.get_current)):
@@ -482,7 +484,7 @@ def get_clash_settings(
     
     return {"data": data, "total": count}
 
-@app.put("/api/clash/setting/{name}", tags=['Clash'], response_model=ClashSettingResponse)
+@router.put("/clash/setting/{name}", tags=['Clash'], response_model=ClashSettingResponse)
 def modify_clash_setting(name: str,
                 modified: ClashSettingCreate,
                 db: Session = Depends(get_db),
@@ -1166,10 +1168,10 @@ def generate_v2ray_links(username: str, db: Session = next(get_db())):
             "alpn": alpn,
         })
 
-        links.append(get_v2ray_link(
-            remark=proxy["inbound"],
-            address=proxy["server"],
-            inbound=inbound,
-            settings=settings))
+        # links.append(get_v2ray_link(
+        #     remark=proxy["inbound"],
+        #     address=proxy["server"],
+        #     inbound=inbound,
+        #     settings=settings))
 
     return links

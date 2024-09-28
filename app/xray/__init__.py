@@ -47,7 +47,7 @@ def hosts(storage: dict):
             storage[inbound_tag] = [
                 {
                     "remark": host.remark,
-                    "address": host.address,
+                    "address": [i.strip() for i in host.address.split(',')] if host.address else [],
                     "port": host.port,
                     "path": host.path if host.path else None,
                     "sni": [i.strip() for i in host.sni.split(',')] if host.sni else [],
@@ -61,7 +61,8 @@ def hosts(storage: dict):
                     else host.security.value,
                     "allowinsecure": host.allowinsecure,
                     "mux_enable": host.mux_enable,
-                    "fragment_setting": host.fragment_setting
+                    "fragment_setting": host.fragment_setting,
+                    "random_user_agent": host.random_user_agent,
                 } for host in inbound_hosts if not host.is_disabled
             ]
 

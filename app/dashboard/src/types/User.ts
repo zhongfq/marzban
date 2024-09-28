@@ -40,6 +40,7 @@ export type User = {
   expire: number | null;
   data_limit: number | null;
   data_limit_reset_strategy: DataLimitResetStrategy;
+  on_hold_expire_duration: number | null;
   lifetime_used_traffic: number;
   username: string;
   used_traffic: number;
@@ -61,6 +62,7 @@ export type UserCreate = Pick<
   | "expire"
   | "data_limit"
   | "data_limit_reset_strategy"
+  | "on_hold_expire_duration"
   | "username"
   | "status"
   | "sub_url_prefix"
@@ -68,3 +70,18 @@ export type UserCreate = Pick<
   | "sub_revoked_at"
   | "note"
 >;
+
+export type UserApi = {
+  discord_webook: string;
+  is_sudo: boolean;
+  telegram_id: number | string;
+  username: string;
+}
+
+export type UseGetUserReturn = {
+  userData: UserApi;
+  getUserIsPending: boolean;
+  getUserIsSuccess: boolean;
+  getUserIsError: boolean;
+  getUserError: Error | null;
+}

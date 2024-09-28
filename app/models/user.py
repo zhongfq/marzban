@@ -9,6 +9,7 @@ from pydantic import BaseModel, Field, validator
 
 from app import xray
 from app.models.proxy import ProxySettings, ProxyTypes
+from app.models.admin import Admin
 from app.utils.jwt import create_subscription_token
 from app.subscription.share import generate_v2ray_links
 from config import XRAY_SUBSCRIPTION_PATH, XRAY_SUBSCRIPTION_URL_PREFIX
@@ -66,6 +67,8 @@ class User(BaseModel):
     online_at: Optional[datetime] = Field(None, nullable=True)
     on_hold_expire_duration: Optional[int] = Field(None, nullable=True)
     on_hold_timeout: Optional[Union[datetime, None]] = Field(None, nullable=True)
+
+    auto_delete_in_days: Optional[int] = Field(None, nullable=True)
 
     @validator("proxies", pre=True, always=True)
     def validate_proxies(cls, v, values, **kwargs):
@@ -267,6 +270,8 @@ class UserResponse(User):
     excluded_inbounds: Dict[ProxyTypes, List[str]] = {}
     sub_revoked_at: datetime
 
+    admin: Optional[Admin]
+
     class Config:
         orm_mode = True
 
@@ -274,7 +279,7 @@ class UserResponse(User):
     def validate_links(cls, v, values, **kwargs):
         if not v:
             return generate_v2ray_links(
-                values.get("proxies", {}), values.get("inbounds", {}), extra_data=values
+                values.get("proxies", {}), values.get("inbounds", {}), extra_data=values, reverse=False,
             )
         return v
 
@@ -302,6 +307,31 @@ class UserResponse(User):
         else:
             return v
 
+class SubscriptionUserResponse(UserResponse):
+    class Config:
+        orm_mode = True
+        fields = {
+            field: {"include": True} for field in [
+                "username",
+                "status",
+                "expire",
+                "data_limit",
+                "data_limit_reset_strategy",
+                "used_traffic",
+                "lifetime_used_traffic",
+                "proxies",
+                "created_at",
+                "sub_updated_at",
+                "online_at",
+                "links",
+                "subscription_url",
+                "sub_updated_at",
+                "sub_last_user_agent",
+                "online_at",
+            ]
+        }
+
+
 class UsersResponse(BaseModel):
     users: List[UserResponse]
     total: int
@@ -324,3 +354,6 @@ class UserUsageTop10Response(BaseModel):
 
     usages: List[Item]
     users: List[str]
+    
+class UsersUsagesResponse(BaseModel):
+    usages: List[UserUsageResponse]

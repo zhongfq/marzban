@@ -33,6 +33,7 @@ import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import { updateThemeColor } from "utils/themeColor";
 import { Language } from "./Language";
+import useGetUser from "hooks/useGetUser";
 
 type HeaderProps = {
   actions?: ReactNode;
@@ -83,6 +84,15 @@ export const shouldShowDonation = (): boolean => {
 };
 
 export const Header: FC<HeaderProps> = ({ actions }) => {
+  const { userData, getUserIsSuccess, getUserIsPending } = useGetUser();
+
+  const isSudo = () => {
+    if (!getUserIsPending && getUserIsSuccess) {
+      return userData.is_sudo;
+    }
+    return false;
+  };
+
   const {
     onEditingHosts,
     onResetAllUsage,
@@ -134,24 +144,26 @@ export const Header: FC<HeaderProps> = ({ actions }) => {
               position="relative"
             ></MenuButton>
             <MenuList minW="170px" zIndex={99999} className="menuList">
-              <MenuItem
-                maxW="170px"
-                fontSize="sm"
-                icon={<HostsIcon />}
-                onClick={onEditingHosts.bind(null, true)}
-              >
-                {t("header.hostSettings")}
-              </MenuItem>
-              <MenuItem
-                maxW="170px"
-                fontSize="sm"
-                icon={<NodesIcon />}
-                onClick={onEditingNodes.bind(null, true)}
-              >
-                {t("header.nodeSettings")}
-              </MenuItem>
-              <MenuItem
-                maxW="210px"
+              {isSudo() && (
+                <>
+                  <MenuItem
+                    maxW="170px"
+                    fontSize="sm"
+                    icon={<HostsIcon />}
+                    onClick={onEditingHosts.bind(null, true)}
+                  >
+                    {t("header.hostSettings")}
+                  </MenuItem>
+                  <MenuItem
+                    maxW="170px"
+                    fontSize="sm"
+                    icon={<NodesIcon />}
+                    onClick={onEditingNodes.bind(null, true)}
+                  >
+                    {t("header.nodeSettings")}
+                  </MenuItem>
+                  <MenuItem
+                    maxW="210px"
                 fontSize="sm"
                 icon={<SubscriptionIcon />}
                 onClick={onEditingSubscription.bind(null, true)}
@@ -160,20 +172,22 @@ export const Header: FC<HeaderProps> = ({ actions }) => {
               </MenuItem>
               <MenuItem
                 maxW="210px"
-                fontSize="sm"
-                icon={<NodesUsageIcon />}
-                onClick={onShowingNodesUsage.bind(null, true)}
-              >
-                {t("header.nodesUsage")}
-              </MenuItem>
-              <MenuItem
-                maxW="170px"
-                fontSize="sm"
-                icon={<ResetUsageIcon />}
-                onClick={onResetAllUsage.bind(null, true)}
-              >
-                {t("resetAllUsage")}
-              </MenuItem>
+                    fontSize="sm"
+                    icon={<NodesUsageIcon />}
+                    onClick={onShowingNodesUsage.bind(null, true)}
+                  >
+                    {t("header.nodesUsage")}
+                  </MenuItem>
+                  <MenuItem
+                    maxW="170px"
+                    fontSize="sm"
+                    icon={<ResetUsageIcon />}
+                    onClick={onResetAllUsage.bind(null, true)}
+                  >
+                    {t("resetAllUsage")}
+                  </MenuItem>
+                </>
+              )}
               <Link to={DONATION_URL} target="_blank">
                 <MenuItem
                   maxW="170px"
@@ -196,16 +210,18 @@ export const Header: FC<HeaderProps> = ({ actions }) => {
             </MenuList>
           </Menu>
 
-          <IconButton
-            size="sm"
-            variant="outline"
-            aria-label="core settings"
-            onClick={() => {
-              useDashboard.setState({ isEditingCore: true });
-            }}
-          >
-            <CoreSettingsIcon />
-          </IconButton>
+          {isSudo() && (
+            <IconButton
+              size="sm"
+              variant="outline"
+              aria-label="core settings"
+              onClick={() => {
+                useDashboard.setState({ isEditingCore: true });
+              }}
+            >
+              <CoreSettingsIcon />
+            </IconButton>
+          )}
 
           <Language />
 
