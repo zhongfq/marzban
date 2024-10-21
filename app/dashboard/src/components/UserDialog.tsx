@@ -227,6 +227,8 @@ const baseSchema = {
     }),
   expire: z.number().nullable(),
   data_limit_reset_strategy: z.string(),
+  sub_url_prefix: z.string().nullable(),
+  sub_tags: z.string().nullable(),
   inbounds: z.record(z.string(), z.array(z.string())).transform((ins) => {
     Object.keys(ins).forEach((protocol) => {
       if (Array.isArray(ins[protocol]) && !ins[protocol]?.length)
