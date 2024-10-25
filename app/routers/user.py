@@ -257,7 +257,7 @@ def reset_users_data_usage(
             xray.operations.restart_node(node_id, startup_config)
     return {"detail": "Users successfully reset."}
 
-@router.get("/api/user/usage/top10", tags=['User'], response_model=UserUsageTop10Response)
+@router.get("/user/usage/top10", tags=['User'], response_model=UserUsageTop10Response)
 def get_topusage(db: Session = Depends(get_db),
               start: str = None,
               end: str = None,
