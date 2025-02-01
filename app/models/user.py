@@ -66,6 +66,8 @@ class User(BaseModel):
         UserDataLimitResetStrategy.no_reset
     )
     inbounds: Dict[ProxyTypes, List[str]] = {}
+    sub_url_prefix: Union[None, str] = ""
+    sub_tags: Union[None, str] = ""
     note: Optional[str] = Field(None, nullable=True)
     sub_updated_at: Optional[datetime] = Field(None, nullable=True)
     sub_last_user_agent: Optional[str] = Field(None, nullable=True)
@@ -289,6 +291,7 @@ class UserResponse(User):
     subscription_url: str = ""
     proxies: dict
     excluded_inbounds: Dict[ProxyTypes, List[str]] = {}
+    sub_revoked_at: datetime
 
     admin: Optional[Admin] = None
     model_config = ConfigDict(from_attributes=True)
@@ -305,7 +308,9 @@ class UserResponse(User):
     def validate_subscription_url(self):
         if not self.subscription_url:
             salt = secrets.token_hex(8)
-            url_prefix = (XRAY_SUBSCRIPTION_URL_PREFIX).replace('*', salt)
+            url_prefix = self.sub_url_prefix
+            if not url_prefix:
+                url_prefix = (XRAY_SUBSCRIPTION_URL_PREFIX).replace('*', salt)
             token = create_subscription_token(self.username)
             self.subscription_url = f"{url_prefix}/{XRAY_SUBSCRIPTION_PATH}/{token}"
         return self
@@ -326,6 +331,12 @@ class UserResponse(User):
             return v
         raise ValueError("must be an integer or a float, not a string")  # Reject strings
 
+    @field_validator("sub_revoked_at", mode='before')
+    def validate_sub_revoked_at(cls, v, values, **kwargs):
+        if not v:
+            return values.data.get("created_at")
+        else:
+            return v
 
 class SubscriptionUserResponse(UserResponse):
     admin: Admin | None = Field(default=None, exclude=True)
@@ -362,5 +373,13 @@ class UserUsagesResponse(BaseModel):
     usages: List[UserUsageResponse]
 
 
+class UserUsageTop10Response(BaseModel):
+    class Item(BaseModel):
+        name: str
+        data: List[int]
+
+    usages: List[Item]
+    users: List[str]
+    
 class UsersUsagesResponse(BaseModel):
     usages: List[UserUsageResponse]
