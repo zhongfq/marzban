@@ -3,7 +3,7 @@ name: Build-dev
 on:
   push:
     branches:
-      - 'dev'
+      - 'dev_x'
 
 jobs:
   build-dev:

@@ -24,7 +24,7 @@ from config import (
     ONHOLD_STATUS_TEXT,
 )
 
-SERVER_IP = get_public_ip()
+SERVER_IP = "127.0.0.1" #get_public_ip()
 SERVER_IPV6 = get_public_ipv6()
 
 STATUS_EMOJIS = {
