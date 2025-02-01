@@ -25,7 +25,7 @@ from config import (
     ONHOLD_STATUS_TEXT,
 )
 
-SERVER_IP = get_public_ip()
+SERVER_IP = "127.0.0.1" #get_public_ip()
 SERVER_IPV6 = get_public_ipv6()
 
 STATUS_EMOJIS = {
@@ -287,7 +287,7 @@ def process_inbounds_and_tags(
                     sni = random.choice(sni_list).replace("*", salt)
 
                 if sids := inbound.get("sids"):
-                    inbound["sid"] = random.choice(sids)
+                    inbound["sid"] = sids[0] if sids[0] == "" else random.choice(sids)
 
                 req_host = ""
                 req_host_list = host["host"] or inbound["host"]
