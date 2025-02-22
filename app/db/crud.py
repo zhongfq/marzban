@@ -473,7 +473,7 @@ def update_user(db: Session, dbuser: User, modify: UserModify) -> User:
 
     if modify.data_limit is not None:
         dbuser.data_limit = (modify.data_limit or None)
-        if dbuser.status not in (UserStatus.expired, UserStatus.disabled):
+        if dbuser.status not in [UserStatus.expired, UserStatus.disabled]:
             if not dbuser.data_limit or dbuser.used_traffic < dbuser.data_limit:
                 if dbuser.status != UserStatus.on_hold:
                     dbuser.status = UserStatus.active
@@ -490,7 +490,7 @@ def update_user(db: Session, dbuser: User, modify: UserModify) -> User:
 
     if modify.expire is not None:
         dbuser.expire = (modify.expire or None)
-        if dbuser.status in (UserStatus.active, UserStatus.expired):
+        if dbuser.status in [UserStatus.active, UserStatus.expired]:
             if not dbuser.expire or dbuser.expire > datetime.utcnow().timestamp():
                 dbuser.status = UserStatus.active
                 for days_left in sorted(NOTIFY_DAYS_LEFT):
@@ -551,7 +551,7 @@ def reset_user_data_usage(db: Session, dbuser: User) -> User:
 
     dbuser.used_traffic = 0
     dbuser.node_usages.clear()
-    if dbuser.status not in (UserStatus.expired or UserStatus.disabled):
+    if dbuser.status not in [UserStatus.expired, UserStatus.disabled]:
         dbuser.status = UserStatus.active.value
 
     if dbuser.next_plan:
