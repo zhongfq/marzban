@@ -206,22 +206,31 @@ def setup_format_variables(extra_data: dict) -> dict:
         data_left = "∞"
 
     status_emoji = STATUS_EMOJIS.get(extra_data.get("status")) or ""
-    status_text = STATUS_TEXTS.get(extra_data.get("status")) or ""
+    status_template = STATUS_TEXTS.get(extra_data.get("status")) or ""
 
+    # Create a temporary dictionary with variables excluding STATUS_TEXT
+    temp_vars = {
+        "SERVER_IP": SERVER_IP,
+        "SERVER_IPV6": SERVER_IPV6,
+        "USERNAME": extra_data.get("username", "{USERNAME}"),
+        "DATA_USAGE": readable_size(extra_data.get("used_traffic")),
+        "DATA_LIMIT": data_limit,
+        "DATA_LEFT": data_left,
+        "DAYS_LEFT": days_left,
+        "EXPIRE_DATE": expire_date,
+        "JALALI_EXPIRE_DATE": jalali_expire_date,
+        "TIME_LEFT": time_left,
+        "STATUS_EMOJI": status_emoji,
+    }
+
+    # Format the status text using the temporary variables
+    status_text = status_template.format_map(defaultdict(lambda: "<missing>", temp_vars))
+
+    # Create the final format_variables including the formatted STATUS_TEXT
     format_variables = defaultdict(
         lambda: "<missing>",
         {
-            "SERVER_IP": SERVER_IP,
-            "SERVER_IPV6": SERVER_IPV6,
-            "USERNAME": extra_data.get("username", "{USERNAME}"),
-            "DATA_USAGE": readable_size(extra_data.get("used_traffic")),
-            "DATA_LIMIT": data_limit,
-            "DATA_LEFT": data_left,
-            "DAYS_LEFT": days_left,
-            "EXPIRE_DATE": expire_date,
-            "JALALI_EXPIRE_DATE": jalali_expire_date,
-            "TIME_LEFT": time_left,
-            "STATUS_EMOJI": status_emoji,
+            **temp_vars,
             "STATUS_TEXT": status_text,
         },
     )
