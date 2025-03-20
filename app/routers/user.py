@@ -149,10 +149,10 @@ def remove_user(
     crud.remove_user(db, dbuser)
     bg.add_task(xray.operations.remove_user, dbuser=dbuser)
 
-    # fix an issue #1634 where admins registered via env variables can't delete users
-    if not SUDOERS.get(admin.username): 
-        bg.add_task(
-            report.user_deleted, username=dbuser.username, user_admin=Admin.model_validate(dbuser.admin), by=admin
+    bg.add_task(
+            report.user_deleted, username=dbuser.username,
+            user_admin=Admin.model_validate(dbuser.admin) if dbuser.admin else None,
+            by=admin
         )
 
     logger.info(f'User "{dbuser.username}" deleted')
