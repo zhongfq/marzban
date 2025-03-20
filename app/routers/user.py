@@ -18,6 +18,7 @@ from app.models.user import (
     UserUsagesResponse,
 )
 from app.utils import report, responses
+from config import SUDOERS
 
 router = APIRouter(tags=["User"], prefix="/api", responses={401: responses._401})
 
@@ -148,9 +149,11 @@ def remove_user(
     crud.remove_user(db, dbuser)
     bg.add_task(xray.operations.remove_user, dbuser=dbuser)
 
-    bg.add_task(
-        report.user_deleted, username=dbuser.username, user_admin=Admin.model_validate(dbuser.admin), by=admin
-    )
+    # fix an issue #1634 where admins registered via env variables can't delete users
+    if not SUDOERS.get(admin.username): 
+        bg.add_task(
+            report.user_deleted, username=dbuser.username, user_admin=Admin.model_validate(dbuser.admin), by=admin
+        )
 
     logger.info(f'User "{dbuser.username}" deleted')
     return {"detail": "User successfully deleted"}
